@@ -852,6 +852,28 @@ EOF
     end
   end
 
+  describe "Remove attributes already set" do
+    before :each do
+      @fixture.stub(:find_target_bios_setting).and_return("")
+      @fixture.stub(:process_nics).and_return({})
+      @fixture.stub(:get_raid_config_changes).and_return({})
+      @fixture.instance_variable_set(:@boot_device, "SD")
+      @fixture.stub(:raid_configuration).and_return({})
+      @fixture.stub(:find_current_boot_attribute).with(:biosbootseq).and_return("")
+    end
+    it "should remove HddSeq if already the correct value" do
+      @fixture.stub(:find_current_boot_attribute).with(:hddseq).and_return("Disk.SDInternal.1-1")
+      xml_base = @fixture.munge_config_xml
+      expect(xml_base.to_s.include?("HddSeq")).to eq(false)
+    end
+
+    it "shoule keep HddSeq if not correct value" do
+      @fixture.stub(:find_current_boot_attribute).with(:hddseq).and_return("HD-Drive")
+      xml_base = @fixture.munge_config_xml
+      expect(xml_base.to_s.include?("HddSeq")).to eq(true)
+    end
+  end
+
   describe "#rotate_config_xml_file" do
     before :each do
       config_file_path = File.join(Dir.tmpdir, "rspec.xml")
